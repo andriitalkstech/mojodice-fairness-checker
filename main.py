@@ -90,10 +90,11 @@ def start_data_collector():
             time.sleep(5)
 
 
-def start_profit_processor():
-
+def start_data_processor():
     while True:
         xch_total: float = 0.0
+        win_count = 0
+        lose_count = 0
         documents = db.all()
         for doc in documents:
             xch_total = xch_total + float(doc.get('xch_in'))
@@ -101,9 +102,17 @@ def start_profit_processor():
                 xch_total = xch_total - float(doc.get('xch_out'))
             else:
                 xch_total = xch_total + float(doc.get('xch_out'))
-        print("{datetime}: Total XCH balance: {balance}".format(
+
+            if doc.get('result') == "WIN":
+                win_count += 1
+            else:
+                lose_count += 1
+
+
+        print("{datetime}: Total XCH balance: {balance}, Win/Lose ratio - {ratio}".format(
             datetime=datetime.now().strftime("%d-%b-%Y_%H:%M:%S"),
-            balance=str(xch_total)))
+            balance=str(xch_total),
+            ratio=str(win_count/lose_count)))
         time.sleep(60)
 
 
@@ -112,7 +121,7 @@ db = TinyDB('local_db.json')
 document = Query()
 
 t1 = threading.Thread(target=start_data_collector, args=())
-t2 = threading.Thread(target=start_profit_processor, args=())
+t2 = threading.Thread(target=start_data_processor, args=())
 
 t1.start()
 t2.start()
